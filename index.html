@@ -47,6 +47,7 @@
             margin: 0;
             padding: 0;
             height: 100%;
+            width: 100%;
             background-color: #0b0f19;
             color: #f3f4f6;
             overflow: hidden;
@@ -118,70 +119,81 @@
         }
     </style>
 </head>
-<body class="flex flex-col md:flex-row font-sans">
+<body class="flex flex-col md:flex-row h-screen w-screen overflow-hidden font-sans bg-brand-bgDark text-gray-100">
 
-    <!-- Sidebar (Desktop) / Sliding Panel (Mobile) -->
-    <div id="sidebar" class="z-[9999] flex flex-col w-full md:w-96 md:h-full bg-brand-bgDark border-b md:border-b-0 md:border-r border-brand-borderDark transition-all duration-300 ease-in-out shrink-0 absolute md:relative bottom-0 md:bottom-auto h-2/5 md:h-auto max-h-[85vh] md:max-h-none rounded-t-3xl md:rounded-t-none">
+    <!-- Sidebar / Collapsible Bottom Sheet -->
+    <div id="sidebar" class="z-[9999] flex flex-col w-full md:w-96 h-[380px] md:h-full bg-brand-bgDark border-t md:border-t-0 md:border-r border-brand-borderDark transition-all duration-300 ease-in-out shrink-0 absolute md:relative bottom-0 md:bottom-auto rounded-t-3xl md:rounded-t-none shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.5)] md:shadow-none">
         
-        <!-- Drag Handler for Mobile -->
-        <div class="flex items-center justify-center py-3 md:hidden cursor-pointer" onclick="toggleMobileHeight()">
-            <div class="w-12 h-1.5 bg-gray-600 rounded-full"></div>
+        <!-- Mobile Swipe/Drag Header -->
+        <div id="drag-handle" class="flex flex-col items-center py-2.5 md:hidden cursor-pointer select-none" onclick="cycleSheetState()">
+            <div class="w-12 h-1 bg-gray-600 rounded-full mb-1"></div>
+            <span id="sheet-state-text" class="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Swipe / Tap to Expand</span>
         </div>
 
-        <!-- Sidebar Header -->
-        <div class="px-6 pb-4 pt-2 md:pt-6 border-b border-brand-borderDark shrink-0">
-            <h1 class="text-xl font-bold bg-gradient-to-r from-sky-400 to-emerald-400 bg-clip-text text-transparent">Company Route Map</h1>
-            <p class="text-xs text-gray-400 mt-1">Geocoding & visit routes for field agents</p>
-            
-            <!-- Global Search -->
-            <div class="relative mt-4">
-                <input type="text" id="search-input" oninput="applyFilters()" placeholder="Search company, phone, email..." class="w-full bg-brand-cardDark border border-brand-borderDark rounded-xl px-4 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand" />
-                <span class="absolute right-3 top-2.5 text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m21-21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
-                    </svg>
-                </span>
+        <!-- List View (Includes Search, Filters, and List) -->
+        <div id="list-view" class="flex flex-col flex-1 min-h-0">
+            <!-- Sidebar/Header -->
+            <div class="px-6 pb-4 pt-1 md:pt-6 border-b border-brand-borderDark shrink-0">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-sky-400 to-emerald-400 bg-clip-text text-transparent">Company Route Map</h1>
+                    <span id="counter" class="text-[10px] text-gray-500 bg-brand-cardDark border border-brand-borderDark rounded-full px-2.5 py-0.5">0 / 0</span>
+                </div>
+                
+                <!-- Global Search -->
+                <div class="relative mt-4">
+                    <input type="text" id="search-input" oninput="applyFilters()" placeholder="Search company, phone, email..." class="w-full bg-brand-cardDark border border-brand-borderDark rounded-xl px-4 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand" />
+                    <span class="absolute right-3 top-2.5 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m21-21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.637 10.637Z" />
+                        </svg>
+                    </span>
+                </div>
+                
+                <!-- Quick filters -->
+                <div class="flex gap-2 mt-3 overflow-x-auto pb-1 shrink-0">
+                    <select id="route-filter" onchange="applyFilters()" class="bg-brand-cardDark border border-brand-borderDark rounded-lg px-2 py-1 text-xs text-gray-300 focus:outline-none max-w-[150px]">
+                        <option value="">All Route Groups</option>
+                    </select>
+                    <select id="status-filter" onchange="applyFilters()" class="bg-brand-cardDark border border-brand-borderDark rounded-lg px-2 py-1 text-xs text-gray-300 focus:outline-none">
+                        <option value="">All Statuses</option>
+                        <option value="Verified">Verified Only</option>
+                        <option value="Unverified">Unverified Only</option>
+                    </select>
+                </div>
             </div>
-            
-            <!-- Quick filters -->
-            <div class="flex gap-2 mt-3 overflow-x-auto pb-1 shrink-0">
-                <select id="route-filter" onchange="applyFilters()" class="bg-brand-cardDark border border-brand-borderDark rounded-lg px-2 py-1 text-xs text-gray-300 focus:outline-none max-w-[140px]">
-                    <option value="">All Route Groups</option>
-                </select>
-                <select id="status-filter" onchange="applyFilters()" class="bg-brand-cardDark border border-brand-borderDark rounded-lg px-2 py-1 text-xs text-gray-300 focus:outline-none">
-                    <option value="">All Statuses</option>
-                    <option value="Verified">Verified Only</option>
-                    <option value="Unverified">Unverified Only</option>
-                </select>
+
+            <!-- Scrollable list of companies -->
+            <div id="company-list" class="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+                <!-- Dynamically populated -->
             </div>
         </div>
 
-        <!-- Scrollable list of companies -->
-        <div id="company-list" class="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-            <!-- Dynamically populated -->
-        </div>
-        
-        <!-- Footer / GPS Locate -->
-        <div class="px-6 py-4 border-t border-brand-borderDark flex items-center justify-between shrink-0 bg-brand-bgDark rounded-b-none">
-            <span id="counter" class="text-xs text-gray-400">Loading...</span>
-            <button onclick="locateUser()" class="flex items-center gap-1.5 bg-brand hover:bg-brand-dark px-3 py-1.5 rounded-lg text-xs font-semibold text-white shadow-lg transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+        <!-- Detail View (Shows selected company details in bottom sheet) -->
+        <div id="detail-view" class="hidden flex flex-col flex-1 p-6 overflow-y-auto min-h-0 bg-brand-bgDark">
+            <!-- Back Button -->
+            <button onclick="showListView()" class="flex items-center gap-1.5 text-sky-400 hover:text-sky-300 text-xs font-semibold uppercase tracking-wider mb-4 transition-all focus:outline-none select-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                 </svg>
-                Locate Me
+                Back to List
             </button>
+            <div id="detail-content" class="space-y-4">
+                <!-- Filled dynamically -->
+            </div>
         </div>
     </div>
 
     <!-- Map View -->
-    <div class="flex-1 h-3/5 md:h-full relative">
+    <div class="flex-1 h-full w-full relative">
         <div id="map"></div>
         
-        <!-- Floating details card (details selected on marker click) -->
-        <div id="details-card" class="hidden absolute bottom-24 md:bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-96 z-[9999] bg-[#0f172a]/90 border border-brand-borderDark backdrop-filter backdrop-blur-xl rounded-2xl p-5 shadow-2xl transition-all duration-300">
-            <!-- Populated via click -->
-        </div>
+        <!-- Floating Locate Me Button (Positioned dynamically above bottom sheet) -->
+        <button id="locate-btn" onclick="locateUser()" class="absolute bottom-[396px] md:bottom-6 right-4 md:right-6 z-[999] flex items-center justify-center w-12 h-12 rounded-full bg-[#152036]/95 border border-brand-borderDark shadow-2xl text-gray-300 hover:text-white transition-all duration-300 focus:outline-none backdrop-filter backdrop-blur-md">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+            </svg>
+        </button>
     </div>
 
     <!-- Leaflet.js JS -->
@@ -216,10 +228,11 @@
             showCoverageOnHover: false
         });
         let activeMarkers = [];
+        let companyMarkers = {}; // Map Company_Name -> marker object
         let userLocationMarker = null;
         let userLocationCircle = null;
         let selectedCompany = null;
-        let isMobileExpanded = false;
+        let sheetState = 1; // 0: collapsed, 1: half, 2: full
 
         // Set up filters dropdowns
         const routeSelect = document.getElementById('route-filter');
@@ -251,6 +264,7 @@
         function renderMap(filtered) {
             markersGroup.clearLayers();
             activeMarkers = [];
+            companyMarkers = {};
             
             const bounds = [];
             
@@ -262,20 +276,25 @@
                         icon: createSvgIcon(color, isVerified)
                     });
                     
-                    // Attach company data to marker
-                    marker.company = c;
+                    // Simple Leaflet popup
+                    marker.bindPopup(`<div class="text-xs font-bold text-gray-200">${c.Company_Name}</div>`);
                     
-                    marker.on('click', () => showDetails(c));
+                    marker.company = c;
+                    marker.on('click', () => {
+                        showDetails(c);
+                        map.panTo([c.Latitude, c.Longitude]);
+                    });
                     
                     markersGroup.addLayer(marker);
                     activeMarkers.push(marker);
+                    companyMarkers[c.Company_Name] = marker;
                     bounds.push([c.Latitude, c.Longitude]);
                 }
             });
             
             map.addLayer(markersGroup);
             
-            // Adjust bounds if we have points
+            // Adjust bounds if we have points on filter trigger
             if (bounds.length > 0) {
                 map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
             }
@@ -306,10 +325,13 @@
                     showDetails(c);
                     if (c.Latitude && c.Longitude) {
                         map.setView([c.Latitude, c.Longitude], 15);
+                        const marker = companyMarkers[c.Company_Name];
+                        if (marker) {
+                            setTimeout(() => marker.openPopup(), 300);
+                        }
                     }
-                    // Mobile slide down list on selection
                     if (window.innerWidth < 768) {
-                        document.getElementById('sidebar').style.height = '120px';
+                        setSheetState(1); // Set to half-screen detail view
                     }
                 };
                 
@@ -359,13 +381,12 @@
             
             // Update counter
             const totalWithCoords = filtered.filter(c => c.Latitude && c.Longitude).length;
-            document.getElementById('counter').textContent = `${filtered.length} companies (${totalWithCoords} on map)`;
+            document.getElementById('counter').textContent = `${totalWithCoords} / ${filtered.length} on map`;
         }
 
         // Show details bottom/right card
         function showDetails(c) {
             selectedCompany = c;
-            const card = document.getElementById('details-card');
             const isVerified = c.Confidence && c.Confidence.includes('Verified');
             const color = groupColors[c.Route_Group] || '#6b7280';
             
@@ -374,85 +395,161 @@
             const googleNavUrl = `google.navigation:q=${c.Latitude},${c.Longitude}`;
             const webGoogleNavUrl = `https://www.google.com/maps/dir/?api=1&destination=${c.Latitude},${c.Longitude}`;
             
-            card.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div class="flex-1 pr-2">
-                        <span class="px-2 py-0.5 text-[10px] font-bold tracking-wider rounded-md text-white select-none mr-1.5" style="background-color: ${color}">
-                            ${c.Route_Group}
-                        </span>
-                        <h2 class="text-base font-bold text-gray-100 mt-2">${c.Company_Name}</h2>
-                    </div>
-                    <button onclick="closeDetails()" class="text-gray-500 hover:text-gray-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+            const detailContent = document.getElementById('detail-content');
+            detailContent.innerHTML = `
+                <div>
+                    <span class="px-2.5 py-1 text-[10px] font-bold tracking-wider rounded-md text-white select-none" style="background-color: ${color}">
+                        ${c.Route_Group}
+                    </span>
+                    <h2 class="text-lg font-bold text-gray-100 mt-3.5">${c.Company_Name}</h2>
                 </div>
                 
-                <div class="mt-4 space-y-2 text-xs text-gray-300">
-                    <div class="flex items-center justify-between py-1 border-b border-brand-borderDark">
+                <div class="space-y-2.5 text-sm text-gray-300 pt-2">
+                    <div class="flex items-center justify-between py-2 border-b border-brand-borderDark">
                         <span class="text-gray-500">Email:</span>
-                        <span class="font-medium text-gray-200 line-clamp-1">${c.Email || 'None'}</span>
+                        <span class="font-medium text-gray-200 line-clamp-1 select-all">${c.Email || 'None'}</span>
                     </div>
-                    <div class="flex items-center justify-between py-1 border-b border-brand-borderDark">
+                    <div class="flex items-center justify-between py-2 border-b border-brand-borderDark">
                         <span class="text-gray-500">Phone:</span>
-                        <span class="font-medium text-gray-200">${c.Phone || 'None'}</span>
+                        <span class="font-medium text-gray-200 select-all">${c.Phone || 'None'}</span>
                     </div>
-                    <div class="flex items-center justify-between py-1 border-b border-brand-borderDark">
+                    <div class="flex items-center justify-between py-2 border-b border-brand-borderDark">
                         <span class="text-gray-500">Verification:</span>
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${isVerified ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}">
                             ${c.Confidence || 'Unverified'}
                         </span>
                     </div>
                     ${c.Route_Order ? `
-                    <div class="flex items-center justify-between py-1 border-b border-brand-borderDark">
+                    <div class="flex items-center justify-between py-2 border-b border-brand-borderDark">
                         <span class="text-gray-500">Visit Order:</span>
                         <span class="font-bold text-sky-400">#${c.Route_Order}</span>
                     </div>` : ''}
-                    <div class="py-1">
-                        <span class="text-gray-500">Notes:</span>
-                        <p class="mt-1 text-gray-400 italic">${c.Notes || 'No visit notes available.'}</p>
+                    <div class="py-2">
+                        <span class="text-gray-500 block mb-1">Notes:</span>
+                        <p class="text-gray-400 italic text-xs leading-relaxed">${c.Notes || 'No visit notes available.'}</p>
                     </div>
                 </div>
 
                 <!-- Navigation Buttons -->
-                <div class="grid grid-cols-2 gap-3 mt-5">
-                    <a href="${googleNavUrl}" onclick="handleAndroidNav(event, '${webGoogleNavUrl}')" class="flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-2 px-4 rounded-xl text-xs shadow-lg shadow-teal-500/20 text-center transition-all">
+                <div class="grid grid-cols-2 gap-3 pt-3">
+                    <a href="${googleNavUrl}" onclick="handleAndroidNav(event, '${webGoogleNavUrl}')" class="flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-teal-500/20 text-center transition-all select-none">
                         Google Maps
                     </a>
-                    <a href="${appleNavUrl}" class="flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-xl text-xs shadow-lg shadow-sky-500/20 text-center transition-all">
+                    <a href="${appleNavUrl}" class="flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-lg shadow-sky-500/20 text-center transition-all select-none">
                         Apple Maps
                     </a>
                 </div>
             `;
             
-            card.classList.remove('hidden');
+            // Switch sidebar view to Detail Mode
+            document.getElementById('list-view').classList.add('hidden');
+            document.getElementById('detail-view').classList.remove('hidden');
+            
+            // Auto-expand sheet to at least half-height on mobile
+            if (window.innerWidth < 768 && sheetState === 0) {
+                setSheetState(1);
+            }
         }
 
-        function closeDetails() {
-            document.getElementById('details-card').classList.add('hidden');
+        function showListView() {
+            document.getElementById('detail-view').classList.add('hidden');
+            document.getElementById('list-view').classList.remove('hidden');
             selectedCompany = null;
+            map.closePopup();
         }
 
         // Helper to handle fallback on browser if native URL scheme fails
         function handleAndroidNav(e, fallbackUrl) {
-            // On non-android devices or standard browser, trigger web route as fallback
             if (!/Android/i.test(navigator.userAgent)) {
                 e.preventDefault();
                 window.open(fallbackUrl, '_blank');
             }
         }
 
-        // Mobile Sheet Resize
-        function toggleMobileHeight() {
+        // Mobile Sheet Heights: 0=collapsed (76px), 1=half (380px), 2=full (85vh)
+        function setSheetState(state) {
             if (window.innerWidth >= 768) return;
+            sheetState = state;
+            
             const sidebar = document.getElementById('sidebar');
-            if (isMobileExpanded) {
-                sidebar.style.height = '120px';
-                isMobileExpanded = false;
+            const stateText = document.getElementById('sheet-state-text');
+            
+            let height = '380px';
+            if (state === 0) {
+                height = '76px';
+                stateText.textContent = 'Swipe / Tap to Expand';
+            } else if (state === 1) {
+                height = '380px';
+                stateText.textContent = 'Half View - Tap to Expand';
+            } else if (state === 2) {
+                height = '85vh';
+                stateText.textContent = 'Full View - Tap to Collapse';
+            }
+            
+            sidebar.style.height = height;
+            
+            // Calculate float button position above sheet
+            const heightPx = (state === 0) ? 76 : ((state === 1) ? 380 : window.innerHeight * 0.85);
+            updateLocateButtonPosition(heightPx);
+        }
+
+        function cycleSheetState() {
+            if (window.innerWidth >= 768) return;
+            setSheetState((sheetState + 1) % 3);
+        }
+
+        function updateLocateButtonPosition(heightPx) {
+            const btn = document.getElementById('locate-btn');
+            if (window.innerWidth < 768) {
+                btn.style.bottom = (heightPx + 16) + 'px';
             } else {
-                sidebar.style.height = '85vh';
-                isMobileExpanded = true;
+                btn.style.bottom = '24px';
+            }
+        }
+
+        // Add mobile drag gestures
+        let touchStartY = 0;
+        const dragHandle = document.getElementById('drag-handle');
+        dragHandle.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        dragHandle.addEventListener('touchend', (e) => {
+            const touchEndY = e.changedTouches[0].clientY;
+            const diff = touchStartY - touchEndY;
+            
+            if (diff > 50) {
+                // Swipe Up
+                if (sheetState < 2) setSheetState(sheetState + 1);
+            } else if (diff < -50) {
+                // Swipe Down
+                if (sheetState > 0) setSheetState(sheetState - 1);
+            }
+        }, { passive: true });
+
+        // Expand sheet when search input is focused
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('focus', () => {
+            if (window.innerWidth < 768 && sheetState === 0) {
+                setSheetState(1);
+            }
+        });
+
+        // Resize layout on window resize (between mobile & desktop width)
+        window.addEventListener('resize', () => {
+            resetLayout();
+        });
+
+        function resetLayout() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('locate-btn');
+            if (window.innerWidth >= 768) {
+                sidebar.style.height = '100%';
+                sidebar.style.width = '24rem'; // w-96
+                btn.style.bottom = '24px';
+            } else {
+                sidebar.style.width = '100%';
+                setSheetState(sheetState); // Apply height based on state
             }
         }
 
@@ -491,10 +588,11 @@
             alert("Could not retrieve your location. Make sure GPS/Location services are enabled.");
         });
 
-        // Page Start
-        // Resize sidebar on page load for mobile
+        // Initial setup
         if (window.innerWidth < 768) {
-            document.getElementById('sidebar').style.height = '120px';
+            setSheetState(1); // Start at half-height on mobile
+        } else {
+            resetLayout();
         }
         
         applyFilters();
